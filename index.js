@@ -6,29 +6,9 @@ var request = require('request');
 var cheerio = require('cheerio');
 var fs = require('fs');
 var Q = require('q');
-var path = require('path');
 
 
 var rules = require('./fuc/Rules');
-var tool = require('./fuc/tool');
-//crawler();
-var test = {};
-function crawler() {
-    console.log(rules);
-    rules.forEach(function (site) {
-        //request(url).pipe((fs.createWriteStream('suren.html')));
-        request(site.site, function (error, res, body) {
-            if (!error && res.statusCode == 200) {
-                var $ = cheerio.load(body);
-                var current = $('.pagination').attr('current_page');
-                if (!isNaN(current)) {
-                    console.log(current)
-                }
-                console.log(current);
-            }
-        })
-    });
-}
 console.time('time->');
 var items = rules[0];
 parseSite(items.site).then(function(res){
