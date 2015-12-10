@@ -16,10 +16,7 @@ var test = {};
 function crawler() {
     console.log(rules);
     rules.forEach(function (site) {
-        //var url = site.site;
-        //console.log(site)
         //request(url).pipe((fs.createWriteStream('suren.html')));
-        //    parseSite(site);
         request(site.site, function (error, res, body) {
             if (!error && res.statusCode == 200) {
                 var $ = cheerio.load(body);
@@ -66,7 +63,6 @@ function parseSite(url,prevRes) {
 
 function parsePage($, site) {
     var defer = Q.defer();
-    
     try{
         var arr = [];
         var li = $(site);
