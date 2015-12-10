@@ -15,5 +15,8 @@
     "cheerio": "^0.19.0",
     "q": "^1.4.1",
     "request": "^2.65.0"
+  },
+  "devDependencies": {
+    "mongoose": "^4.3.0"
   }
 }

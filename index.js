@@ -10,9 +10,10 @@ var Q = require('q');
 
 var rules = require('./fuc/Rules');
 console.time('time->');
-var items = rules[0];
+var items = rules[1];
 parseSite(items.site).then(function(res){
     console.log(res.length);
+    console.log(JSON.stringify(res));
     console.timeEnd('time->');
 }).catch(function(e){
     console.log(e);

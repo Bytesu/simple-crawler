@@ -3,6 +3,7 @@
  */
 var tool = require('./tool')
 var path = require('path');
+var model = require('../collections/')
 //抓取规则
 module.exports = [
     {
@@ -36,14 +37,22 @@ module.exports = [
         data_structure:function(item){
             // item.find()
             var link = item.find('div.link > a').attr('href');
-            console.log(item.find('div.link > a').text());
-            return {
+            // console.log(item.find('div.link > a').text());
+            var xbiao = {
                 img:item.find('a > img').attr('src'),
                 link:link,
                 price:item.find('p.price').html(),
                 title:item.find('div.link > a').text(),
                 md5:tool.md5Str(link)
             };
+            new model.Xbiao(xbiao).save(function(err,res){
+                if(!err){
+                    // console.log(res);                    
+                }else{
+                    throw new Error('Test ing !')
+                }
+            });
+            return xbiao;
         },
         current_page:function($){ //当前页
             return $('.pages').find('.act').html();
