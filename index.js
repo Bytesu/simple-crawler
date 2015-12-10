@@ -33,7 +33,7 @@ function crawler() {
     });
 }
 console.time('time->');
-var items = rules[1];
+var items = rules[0];
 parseSite(items.site).then(function(res){
     console.log(res.length);
     console.timeEnd('time->');
@@ -47,7 +47,7 @@ function parseSite(url,prevRes) {
             var $ = cheerio.load(body);
             var current = items.current_page($);
             console.log(current);
-            
+           
             if (!isNaN(current)&&current<10) { // ""为true
                 current = parseInt(current) + 1 ;
                 Q.all([parseSite(items.next_page(current)), parsePage($, items.list_item)]).then(function(allRes){
@@ -66,23 +66,16 @@ function parseSite(url,prevRes) {
 
 function parsePage($, site) {
     var defer = Q.defer();
+    
     try{
         var arr = [];
         var li = $(site);
-        console.log($(site).length)
         li.each(function (index, ele) {
-            
-            var text = items.match_title($,ele).trim();
-            var href = items.match_link($,ele);
-            
-            var obj = {
-                href: path.join('', href),
-                text: text,
-                md5: tool.md5Str(path.join('', href))
-            };
-            test[tool.md5Str(obj.href)] = obj;
-            console.log(JSON.stringify(obj));
-            arr.push(obj);
+            try{
+                arr.push(items.data_structure($(ele)));
+            }catch(e){
+                console.log(e)
+            } 
         });
         defer.resolve(arr);
     }catch(e){
