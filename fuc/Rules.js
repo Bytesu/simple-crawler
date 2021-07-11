@@ -4,58 +4,81 @@
 var tool = require('./tool')
 var path = require('path');
 var model = require('../collections/')
-//抓取规则
-module.exports = [
-    {
-        site: 'http://cnodejs.org/',
-        list_item:'#topic_list .cell',
-        next_page:function(current){
-            return 'https://cnodejs.org/?tab=all&page='+current;
-        },
-        data_structure:function(item){
-            var site_ = this.site;
-            var link = path.join(site_, item.find('.topic_title').attr('href'));
-            return {
-                href:link,
-                text: item.find('.topic_title').text().trim(),
-                md5: tool.md5Str(link)
+const cleanTextFn = (text)=>{
+    return (text||'').replace(/[（）?？,，。.0-9;；、】【'"‘“’”]/ig,'') //
+        .replace(/\s+/g, "") //空格
+        .replace(/_+/g, "") //下划线
+        .replace(/_+/g, "")
+}
+const sites = (list) => {
+    return list.map(currentPage => {
+        return {
+            site: 'https://www.jiakaobaodian.com/tiku/chapter/'+currentPage+'.html',//站点url
+            list_item: 'ul.list-w > li', //抓去最小单元
+            next_page: function (page) { // page 列表页
+                return 'https://www.jiakaobaodian.com/tiku/chapter/'+currentPage+'.html?page=' + page;
+            },
+            /**
+             * 返回需要的数据结构
+             */
+            data_structure: function (item) {
+                var title = item.find('div.timu > p > a')[0].children[0].data;
+                /**
+                 * @todo 匹配序号
+                 * @type {string}
+                 */
+                title = cleanTextFn(title);
+                console.log(title);
+                let texts = [];
+                let answer = '';
+                item.find('.answer-w > .options-w > p').map((index, ele) => {
+                    let item = ele.children[0].data;
+                    if (ele.attribs['data-right'] === 'true') {
+                        answer = item
+                    }
+                    texts.push(item);
+                });
+                let dataStr = [cleanTextFn(title), texts.map(item=>cleanTextFn((item))).sort()].flat();
+                // console.log(dataStr)
+                let md5 = tool.md5Str(dataStr.join('').replace('。'));
+                const recordData = {
+                    answers: texts,
+                    title,
+                    answer,
+                    md5
+                };
+                model.Tests.findOne(
+                    {md5},
+                    'title answer',
+                    function (error, record) {
+                        if (!error) {
+                            if (!record) {
+                                new model.Tests(recordData).save(function (err, res) {
+                                    if (!err) {
+                                        // console.log(`save success`);
+                                    } else {
+                                        throw new Error('Test ing !')
+                                    }
+                                });
+                            } else {
+                                // console.log(`query the same data, dataStr is : ` + dataStr)
+                                // console.log(`query the same data, answer is : ` + record._doc.answer)
+                            }
+                        } else {
+                            console.log(error)
+                        }
+                    })
+
+
+                return 1;
+            },
+
+            current_page: function ($) { //当前页
+                return $('.common-paging').find('.active').html();
             }
-        },
-        current_page:function($){
-            return $('.pagination').attr('current_page');
         }
-    },
-    {   
-        site: 'http://watch.xbiao.com/',//站点url
-        list_item:'#list-pic > ul >li', //抓去最小单元
-        next_page:function(page){ // page 列表页
-            return 'http://watch.xbiao.com/p'+page+'.html';
-        },
-        /**
-         * 返回需要的数据结构
-         */ 
-        data_structure:function(item){
-            // item.find()
-            var link = item.find('div.link > a').attr('href');
-            // console.log(item.find('div.link > a').text());
-            var xbiao = {
-                img:item.find('a > img').attr('src'),
-                link:link,
-                price:item.find('p.price').html(),
-                title:item.find('div.link > a').text(),
-                md5:tool.md5Str(link)
-            };
-            new model.Xbiao(xbiao).save(function(err,res){
-                if(!err){
-                    // console.log(res);                    
-                }else{
-                    throw new Error('Test ing !')
-                }
-            });
-            return xbiao;
-        },
-        current_page:function($){ //当前页
-            return $('.pages').find('.act').html();
-        }
-    },
-];
+    })
+
+};
+//抓取规则
+module.exports = sites;
